@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="theme-color" content="#173d35">
+	<title>Browser History | Stack Mini Project</title>
+	<style>
+		:root {
+			color-scheme: light;
+			--ink: #172521;
+			--muted: #65736e;
+			--paper: #f3f5ef;
+			--surface: #ffffff;
+			--line: #dce3dc;
+			--forest: #194b3d;
+			--mint: #c9ef8f;
+			--coral: #e47d61;
+			--blue: #557995;
+			--shadow: 0 18px 45px rgba(31, 54, 45, 0.08);
+		}
+
+		* { box-sizing: border-box; }
+
+		body {
+			margin: 0;
+			min-width: 320px;
+			background: var(--paper);
+			color: var(--ink);
+			font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+			font-size: 14px;
+		}
+
+		button, input { font: inherit; }
+
+		.topbar {
+			min-height: 58px;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			padding: 0 6vw;
+			color: #f5f7f0;
+			background: var(--forest);
+		}
+
+		.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: 0.04em; }
+		.brand-mark { width: 24px; height: 24px; display: grid; place-items: center; border-radius: 6px; background: var(--mint); color: var(--forest); font-size: 12px; }
+		.topbar-link { color: #c6d8ce; font-family: Consolas, monospace; font-size: 11px; text-decoration: none; text-transform: uppercase; }
+		.topbar-link:hover { color: var(--mint); }
+
+		main { width: min(1080px, calc(100% - 40px)); margin: 42px auto 64px; }
+		.page-heading { display: flex; align-items: end; justify-content: space-between; gap: 20px; margin-bottom: 26px; }
+		.eyebrow { margin: 0 0 9px; color: var(--forest); font-family: Consolas, monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+		h1 { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: clamp(32px, 5vw, 48px); font-weight: 400; line-height: 1.05; }
+		.heading-note { max-width: 310px; margin: 0 0 3px; color: var(--muted); line-height: 1.55; }
+
+		.browser-window { overflow: hidden; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); box-shadow: var(--shadow); }
+		.window-bar { min-height: 48px; display: flex; align-items: center; gap: 7px; padding: 0 16px; border-bottom: 1px solid var(--line); background: #fafbf8; }
+		.window-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--coral); }
+		.window-dot:nth-child(2) { background: #e4c36c; }
+		.window-dot:nth-child(3) { background: #86b98c; }
+		.window-label { margin-left: 8px; color: var(--muted); font-family: Consolas, monospace; font-size: 10px; }
+
+		.address-row { display: flex; gap: 10px; padding: 18px; border-bottom: 1px solid var(--line); }
+		.address-row input { min-width: 0; flex: 1; height: 42px; padding: 0 13px; border: 1px solid var(--line); border-radius: 4px; background: white; color: var(--ink); }
+		.address-row input:focus { outline: 2px solid var(--forest); outline-offset: 1px; }
+		button { cursor: pointer; }
+		.primary-button, .control-button { min-height: 42px; padding: 0 16px; border: 0; border-radius: 4px; font-weight: 700; transition: transform 150ms ease, background 150ms ease; }
+		.primary-button { background: var(--forest); color: white; }
+		.primary-button:hover { background: #23624e; transform: translateY(-1px); }
+		.controls { display: flex; flex-wrap: wrap; gap: 9px; padding: 0 18px 17px; }
+		.control-button { min-height: 36px; border: 1px solid var(--line); background: white; color: var(--ink); font-size: 12px; }
+		.control-button:hover:not(:disabled) { border-color: var(--forest); color: var(--forest); }
+		.control-button:disabled { cursor: not-allowed; opacity: 0.45; }
+		.reset-button { margin-left: auto; color: #9c503d; }
+		button:focus-visible, a:focus-visible { outline: 2px solid var(--coral); outline-offset: 3px; }
+
+		.current-page { padding: 23px 24px 27px; background: linear-gradient(120deg, #f1f7eb 0%, #f8faf6 55%, #f1f5f6 100%); }
+		.current-label { margin: 0 0 8px; color: var(--muted); font-family: Consolas, monospace; font-size: 10px; text-transform: uppercase; }
+		.current-value { overflow-wrap: anywhere; margin: 0; color: var(--forest); font-family: Georgia, "Times New Roman", serif; font-size: clamp(22px, 4vw, 30px); }
+
+		.stack-area { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 22px; }
+		.stack-panel { min-height: 245px; padding: 17px; border: 1px solid var(--line); border-radius: 6px; background: #fbfcf9; }
+		.stack-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 15px; }
+		.stack-heading h2 { margin: 0; font-size: 14px; }
+		.stack-count { color: var(--muted); font-family: Consolas, monospace; font-size: 10px; }
+		.stack-list { min-height: 150px; display: flex; flex-direction: column-reverse; align-items: stretch; justify-content: flex-start; gap: 7px; }
+		.stack-item { padding: 10px 12px; border-left: 3px solid var(--blue); border-radius: 2px; background: #edf3f7; color: #304e63; font-family: Consolas, monospace; font-size: 12px; overflow-wrap: anywhere; animation: enter 180ms ease-out both; }
+		.stack-item.top-item { border-left-color: var(--mint); background: #edf5e9; color: var(--forest); }
+		.empty-stack { padding: 12px 0; color: #8b9690; font-size: 12px; }
+		.stack-foot { margin: 12px 0 0; color: var(--muted); font-family: Consolas, monospace; font-size: 10px; }
+		.status-message { min-height: 22px; margin: 0; padding: 0 22px 15px; color: var(--forest); font-size: 12px; }
+		.concept-note { margin: 18px 0 0; padding: 15px 17px; border-left: 3px solid var(--coral); background: #fff; color: var(--muted); font-size: 12px; line-height: 1.6; }
+		.concept-note strong { color: var(--ink); }
+		@keyframes enter { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+		@media (max-width: 640px) {
+			.topbar { padding: 0 20px; }
+			main { width: min(100% - 24px, 1080px); margin-top: 30px; }
+			.page-heading { align-items: start; flex-direction: column; }
+			.stack-area { grid-template-columns: 1fr; padding: 14px; }
+			.stack-panel { min-height: 190px; }
+			.stack-list { min-height: 105px; }
+			.address-row { gap: 7px; padding: 13px; }
+			.address-row input { padding: 0 9px; }
+			.primary-button { padding: 0 12px; }
+			.controls { padding: 0 13px 13px; }
+			.reset-button { margin-left: 0; }
+		}
+
+		@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+	</style>
+</head>
+<body>
+	<header class="topbar">
+		<div class="brand"><span class="brand-mark" aria-hidden="true">DSA</span><span>PROCESS LAB</span></div>
+		<a class="topbar-link" href="index.html">CPU Scheduler</a>
+	</header>
+
+	<main>
+		<div class="page-heading">
+			<div>
+				<p class="eyebrow">Data structures / Stack</p>
+				<h1>Where have<br>you been?</h1>
+			</div>
+			<p class="heading-note">Visit pages, go back, and move forward. Watch the two stacks change as browser history updates.</p>
+		</div>
+
+		<section class="browser-window" aria-label="Browser history stack simulator">
+			<div class="window-bar" aria-hidden="true"><span class="window-dot"></span><span class="window-dot"></span><span class="window-dot"></span><span class="window-label">HISTORY SIMULATOR</span></div>
+			<form class="address-row" id="visit-form">
+				<input id="page-input" type="text" maxlength="80" placeholder="Enter a page name or URL" aria-label="Page name or URL" autocomplete="off" required>
+				<button class="primary-button" type="submit">Visit page <span aria-hidden="true">→</span></button>
+			</form>
+			<div class="current-page" aria-live="polite">
+				<p class="current-label">Current page</p>
+				<p class="current-value" id="current-page">Start page</p>
+			</div>
+			<div class="controls" aria-label="History controls">
+				<button class="control-button" id="back-button" type="button" disabled>← Back</button>
+				<button class="control-button" id="forward-button" type="button" disabled>Forward →</button>
+				<button class="control-button reset-button" id="reset-button" type="button">Reset history</button>
+			</div>
+			<div class="stack-area">
+				<section class="stack-panel" aria-labelledby="back-title">
+					<div class="stack-heading"><h2 id="back-title">Back stack</h2><span class="stack-count" id="back-count">0 pages</span></div>
+					<div class="stack-list" id="back-stack" aria-label="Back stack contents"></div>
+					<p class="stack-foot">TOP · last visited</p>
+				</section>
+				<section class="stack-panel" aria-labelledby="forward-title">
+					<div class="stack-heading"><h2 id="forward-title">Forward stack</h2><span class="stack-count" id="forward-count">0 pages</span></div>
+					<div class="stack-list" id="forward-stack" aria-label="Forward stack contents"></div>
+					<p class="stack-foot">TOP · next page</p>
+				</section>
+			</div>
+			<p class="status-message" id="status-message" role="status" aria-live="polite">Enter a page to begin.</p>
+		</section>
+
+		<p class="concept-note"><strong>DSA concept:</strong> A stack follows LIFO (Last In, First Out). Back moves the current page to the forward stack and pops the back stack. Visiting a new page clears forward history.</p>
+	</main>
+
+	<script>
+		const backStack = [];
+		const forwardStack = [];
+		let currentPage = "Start page";
+
+		const currentPageElement = document.querySelector("#current-page");
+		const backList = document.querySelector("#back-stack");
+		const forwardList = document.querySelector("#forward-stack");
+		const backButton = document.querySelector("#back-button");
+		const forwardButton = document.querySelector("#forward-button");
+
+		function renderStack(element, stack) {
+			if (stack.length === 0) {
+				const emptyMessage = document.createElement("span");
+				emptyMessage.className = "empty-stack";
+				emptyMessage.textContent = "Stack is empty";
+				element.replaceChildren(emptyMessage);
+				return;
+			}
+
+			const items = stack.map((page, index) => {
+				const item = document.createElement("div");
+				item.className = `stack-item${index === stack.length - 1 ? " top-item" : ""}`;
+				item.textContent = page;
+				return item;
+			});
+			element.replaceChildren(...items);
+		}
+
+		function render() {
+			currentPageElement.textContent = currentPage;
+			document.querySelector("#back-count").textContent = `${backStack.length} ${backStack.length === 1 ? "page" : "pages"}`;
+			document.querySelector("#forward-count").textContent = `${forwardStack.length} ${forwardStack.length === 1 ? "page" : "pages"}`;
+			backButton.disabled = backStack.length === 0;
+			forwardButton.disabled = forwardStack.length === 0;
+			renderStack(backList, backStack);
+			renderStack(forwardList, forwardStack);
+		}
+
+		document.querySelector("#visit-form").addEventListener("submit", (event) => {
+			event.preventDefault();
+			const input = document.querySelector("#page-input");
+			const page = input.value.trim();
+			if (!page) return;
+
+			backStack.push(currentPage);
+			currentPage = page;
+			forwardStack.length = 0;
+			document.querySelector("#status-message").textContent = `Visited ${page}. Forward history cleared.`;
+			input.value = "";
+			render();
+			input.focus();
+		});
+
+		backButton.addEventListener("click", () => {
+			if (backStack.length === 0) return;
+			forwardStack.push(currentPage);
+			currentPage = backStack.pop();
+			document.querySelector("#status-message").textContent = `Went back to ${currentPage}.`;
+			render();
+		});
+
+		forwardButton.addEventListener("click", () => {
+			if (forwardStack.length === 0) return;
+			backStack.push(currentPage);
+			currentPage = forwardStack.pop();
+			document.querySelector("#status-message").textContent = `Moved forward to ${currentPage}.`;
+			render();
+		});
+
+		document.querySelector("#reset-button").addEventListener("click", () => {
+			backStack.length = 0;
+			forwardStack.length = 0;
+			currentPage = "Start page";
+			document.querySelector("#status-message").textContent = "History reset. Enter a page to begin.";
+			render();
+		});
+
+		render();
+	</script>
+</body>
+</html>
